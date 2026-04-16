@@ -23,6 +23,9 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 RUN a2enmod rewrite
 
+# 👇 ESTA ES LA LÍNEA NUEVA QUE ARREGLA EL 404 👇
+RUN echo "<Directory ${APACHE_DOCUMENT_ROOT}>\n\tAllowOverride All\n\tRequire all granted\n</Directory>" >> /etc/apache2/apache2.conf
+
 # 4. Ajustar el puerto de Apache para Render (Render asigna un puerto dinámico mediante $PORT)
 # Nota: Durante el build usaremos 80 por defecto, pero en ejecución Render inyectará su puerto.
 RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
