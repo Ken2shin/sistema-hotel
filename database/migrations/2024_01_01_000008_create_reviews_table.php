@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('reviews', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('client_id')->constrained('clients')->cascadeOnDelete();
+            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
+            $table->foreignId('reservation_id')->constrained('reservations')->cascadeOnDelete();
+            $table->integer('calificacion');
+            $table->text('comentario');
+            $table->boolean('is_verified')->default(false);
+            $table->timestamps();
+        });
+
+        Schema::create('room_ratings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('room_id')->constrained('rooms')->cascadeOnDelete();
+            $table->decimal('promedio', 3, 2);
+            $table->integer('total_resenas');
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('room_ratings');
+        Schema::dropIfExists('reviews');
+    }
+};
