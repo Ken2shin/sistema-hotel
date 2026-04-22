@@ -42,8 +42,8 @@ class ClientManager extends Component
 
     public function render()
     {
-        $clients = Client::when($this->search, fn($q) => $q->where('nombre', 'like', "%{$this->search}%")
-                                                         ->orWhere('email', 'like', "%{$this->search}%"))
+        $clients = Client::when($this->search, fn($q) => $q->where('nombre', 'ilike', "%{$this->search}%")
+                                                         ->orWhere('email', 'ilike', "%{$this->search}%"))
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -62,16 +62,18 @@ class ClientManager extends Component
     public function openEditForm(int $id): void
     {
         $client = Client::find($id);
+        
         if ($client) {
             $this->clientId = $id;
             $this->nombre = $client->nombre;
             $this->email = $client->email;
-            $this->phone = $client->phone;
-            $this->document = $client->document;
-            $this->country = $client->country;
-            $this->city = $client->city;
-            $this->address = $client->address;
-            $this->client_type = $client->client_type ?? 'regular';
+            $this->phone = $client->telefono;
+            $this->document = $client->cedula;
+            $this->country = $client->pais;
+            $this->city = $client->ciudad;
+            $this->address = $client->direccion;
+            $this->client_type = $client->tipo_cliente ?? 'regular';
+            
             $this->formMode = 'edit';
             $this->showForm = true;
         }
@@ -82,36 +84,22 @@ class ClientManager extends Component
         $this->validate();
 
         try {
-            if ($this->formMode === 'create') {
-                Client::create([
-                    'nombre' => $this->nombre,
-                    'email' => $this->email,
-                    'phone' => $this->phone,
-                    'document' => $this->document,
-                    'country' => $this->country,
-                    'city' => $this->city,
-                    'address' => $this->address,
-                    'client_type' => $this->client_type,
-                ]);
-                session()->flash('success', 'Cliente creado exitosamente');
-                $this->dispatch('reservation-saved');
-            } else {
-                $client = Client::find($this->clientId);
-                if ($client) {
-                    $client->update([
-                        'nombre' => $this->nombre,
-                        'email' => $this->email,
-                        'phone' => $this->phone,
-                        'document' => $this->document,
-                        'country' => $this->country,
-                        'city' => $this->city,
-                        'address' => $this->address,
-                        'client_type' => $this->client_type,
-                    ]);
-                    session()->flash('success', 'Cliente actualizado exitosamente');
-                    $this->dispatch('reservation-saved');
-                }
-            }
+            $data = [
+                'nombre' => $this->nombre,
+                'email' => $this->email,
+                'telefono' => $this->phone,
+                'cedula' => $this->document,
+                'pais' => $this->country,
+                'ciudad' => $this->city,
+                'direccion' => $this->address,
+                'tipo_cliente' => $this->client_type,
+            ];
+
+            Client::updateOrCreate(['id' => $this->clientId], $data);
+
+            session()->flash('success', $this->formMode === 'create' ? 'Cliente creado exitosamente' : 'Cliente actualizado exitosamente');
+            $this->dispatch('reservation-saved');
+            
             $this->resetForm();
         } catch (\Exception $e) {
             session()->flash('error', 'Error: ' . $e->getMessage());
@@ -121,6 +109,7 @@ class ClientManager extends Component
     public function delete(int $id): void
     {
         $client = Client::find($id);
+        
         if ($client) {
             $client->delete();
             session()->flash('success', 'Cliente eliminado');

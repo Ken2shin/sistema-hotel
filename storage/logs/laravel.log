@@ -13029,3 +13029,24 @@ DETAIL:  Failing row contains (9, 9, user_login, null, null, null, null, 127.0.0
 DETAIL:  Failing row contains (10, 9, user_logout, null, null, null, null, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KH..., 2026-04-16 02:02:19, 2026-04-16 02:02:19). (Connection: pgsql, Host: aws-0-us-west-2.pooler.supabase.com, Port: 6543, Database: postgres, SQL: insert into \"audit_logs\" (\"user_id\", \"action\", \"ip_address\", \"user_agent\", \"updated_at\", \"created_at\") values (9, user_logout, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0, 2026-04-16 02:02:19, 2026-04-16 02:02:19) returning \"id\")"} 
 [2026-04-16 02:04:21] local.ERROR: Failed to create audit log {"action":"user_login","error":"SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column \"model_type\" of relation \"audit_logs\" violates not-null constraint
 DETAIL:  Failing row contains (11, 9, user_login, null, null, null, null, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KH..., 2026-04-16 02:04:21, 2026-04-16 02:04:21). (Connection: pgsql, Host: aws-0-us-west-2.pooler.supabase.com, Port: 6543, Database: postgres, SQL: insert into \"audit_logs\" (\"user_id\", \"action\", \"ip_address\", \"user_agent\", \"updated_at\", \"created_at\") values (9, user_login, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0, 2026-04-16 02:04:21, 2026-04-16 02:04:21) returning \"id\")"} 
+[2026-04-16 02:40:30] local.ERROR: Failed to create audit log {"action":"user_logout","error":"SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column \"model_type\" of relation \"audit_logs\" violates not-null constraint
+DETAIL:  Failing row contains (12, 9, user_logout, null, null, null, null, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KH..., 2026-04-16 02:40:30, 2026-04-16 02:40:30). (Connection: pgsql, Host: aws-0-us-west-2.pooler.supabase.com, Port: 6543, Database: postgres, SQL: insert into \"audit_logs\" (\"user_id\", \"action\", \"ip_address\", \"user_agent\", \"updated_at\", \"created_at\") values (9, user_logout, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0, 2026-04-16 02:40:30, 2026-04-16 02:40:30) returning \"id\")"} 
+[2026-04-20 16:28:03] local.ERROR: Command "server" is not defined.
+
+Did you mean one of these?
+    make:observer
+    serve {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"server\" is not defined.
+
+Did you mean one of these?
+    make:observer
+    serve at C:/Users/EMANUELCLEMENTEMARTI/Downloads/sistema hotel/vendor/symfony/console/Application.php:759)
+[stacktrace]
+#0 C:/Users/EMANUELCLEMENTEMARTI/Downloads/sistema hotel/vendor/symfony/console/Application.php(298): Symfony/Component/Console/Application->find('server')
+#1 C:/Users/EMANUELCLEMENTEMARTI/Downloads/sistema hotel/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#2 C:/Users/EMANUELCLEMENTEMARTI/Downloads/sistema hotel/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/EMANUELCLEMENTEMARTI/Downloads/sistema hotel/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 C:/Users/EMANUELCLEMENTEMARTI/Downloads/sistema hotel/artisan(16): Illuminate/Foundation/Application->handleCommand(Object(Symfony/Component/Console/Input/ArgvInput))
+#5 {main}
+"} 
+[2026-04-20 16:29:30] local.ERROR: Failed to create audit log {"action":"user_login","error":"SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column \"model_type\" of relation \"audit_logs\" violates not-null constraint
+DETAIL:  Failing row contains (23, 9, user_login, null, null, null, null, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KH..., 2026-04-20 16:29:29, 2026-04-20 16:29:29). (Connection: pgsql, Host: aws-0-us-west-2.pooler.supabase.com, Port: 6543, Database: postgres, SQL: insert into \"audit_logs\" (\"user_id\", \"action\", \"ip_address\", \"user_agent\", \"updated_at\", \"created_at\") values (9, user_login, 127.0.0.1, Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0, 2026-04-20 16:29:29, 2026-04-20 16:29:29) returning \"id\")"} 

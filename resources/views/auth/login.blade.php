@@ -90,7 +90,7 @@
 
             <div class="pt-4 border-t border-slate-200">
                 <p class="text-center text-slate-600 text-xs">
-                    © 2024 HotelMS. Todos los derechos reservados.
+                    © 2026 HotelMS. Todos los derechos reservados.
                 </p>
                 <p class="text-center text-slate-500 text-xs mt-2">
                     Sistema seguro de gestión hotelera
