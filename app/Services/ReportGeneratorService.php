@@ -12,94 +12,93 @@ use Illuminate\Support\Facades\Log;
 
 class ReportGeneratorService
 {
-    public function generateRevenueReport(Report $report): void
+    public function generateRevenueReport(Report $report): array
     {
-        $startDate = Carbon::parse($report->start_date);
-        $endDate = Carbon::parse($report->end_date);
+        $startDate = Carbon::parse($report->start_date)->startOfDay();
+        $endDate = Carbon::parse($report->end_date)->endOfDay();
 
-        $payments = Payment::where('status', 'completed')
-            ->whereBetween('created_at', [$startDate, $endDate])
+        // Ajustado a las columnas de tu BD: fecha_pago, estado, monto, metodo_pago
+        $payments = Payment::whereBetween('fecha_pago', [$startDate, $endDate])
+            ->whereIn('estado', ['completado', 'pagado', 'confirmado']) // Ajusta según los estados que uses
             ->get();
 
-        $totalRevenue = $payments->sum('amount');
+        $totalRevenue = $payments->sum('monto');
         $totalTransactions = $payments->count();
 
-        $dailyRevenue = $this->groupByDate($payments, 'created_at');
+        $dailyRevenue = $this->groupByDate($payments, 'fecha_pago', 'monto');
 
-        $paymentMethods = $payments->groupBy('method')
+        $paymentMethods = $payments->groupBy('metodo_pago')
             ->map(fn($group) => [
-                'count' => $group->count(),
-                'total' => $group->sum('amount'),
-                'percentage' => round(($group->sum('amount') / $totalRevenue) * 100, 2),
+                'cantidad' => $group->count(),
+                'total_recaudado' => round($group->sum('monto'), 2),
+                'porcentaje_del_total' => $totalRevenue > 0 ? round(($group->sum('monto') / $totalRevenue) * 100, 2) . '%' : '0%',
             ]);
 
-        $data = [
-            'total_revenue' => $totalRevenue,
-            'total_transactions' => $totalTransactions,
-            'average_transaction' => $totalTransactions > 0 ? round($totalRevenue / $totalTransactions, 2) : 0,
-            'daily_revenue' => $dailyRevenue,
-            'payment_methods' => $paymentMethods,
+        // Retornamos el array exacto que el Modal y el PDF esperan leer
+        return [
+            'resumen_financiero' => [
+                'periodo_evaluado' => $startDate->format('d/m/Y') . ' al ' . $endDate->format('d/m/Y'),
+                'ingresos_totales' => $totalRevenue,
+                'cantidad_transacciones' => $totalTransactions,
+                'promedio_por_transaccion' => $totalTransactions > 0 ? round($totalRevenue / $totalTransactions, 2) : 0,
+                'metodo_mas_usado' => $paymentMethods->sortByDesc('total_recaudado')->keys()->first() ?? 'N/A',
+            ],
+            'desglose_diario' => $dailyRevenue,
+            'metodos_de_pago' => $paymentMethods->toArray(),
         ];
-
-        $summary = [
-            'period' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
-            'total_revenue' => $totalRevenue,
-            'transactions_count' => $totalTransactions,
-            'most_used_method' => $paymentMethods->sortByDesc('total')->keys()->first(),
-        ];
-
-        $report->markAsGenerated($data, $summary);
-        $report->update(['total_amount' => $totalRevenue, 'record_count' => $totalTransactions]);
     }
 
-    public function generateOccupancyReport(Report $report): void
+    public function generateOccupancyReport(Report $report): array
     {
-        $startDate = Carbon::parse($report->start_date);
-        $endDate = Carbon::parse($report->end_date);
+        $startDate = Carbon::parse($report->start_date)->startOfDay();
+        $endDate = Carbon::parse($report->end_date)->endOfDay();
 
-        $totalDays = $endDate->diffInDays($startDate);
+        // Evitar división por cero si seleccionan el mismo día
+        $totalDays = max(1, $endDate->diffInDays($startDate)); 
         $totalRooms = Room::where('is_active', true)->count();
         $totalCapacity = $totalRooms * $totalDays;
 
-        $reservations = Reservation::where('status', '!=', 'cancelled')
+        // Ajustado a tus columnas: estado, fecha_inicio, fecha_fin
+        $reservations = Reservation::where('estado', '!=', 'cancelada')
             ->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('check_in', [$startDate, $endDate])
-                    ->orWhereBetween('check_out', [$startDate, $endDate]);
+                $q->whereBetween('fecha_inicio', [$startDate, $endDate])
+                    ->orWhereBetween('fecha_fin', [$startDate, $endDate]);
             })
             ->get();
 
         $occupiedDays = 0;
         foreach ($reservations as $reservation) {
-            $start = max($reservation->check_in, $startDate);
-            $end = min($reservation->check_out, $endDate);
-            $occupiedDays += $end->diffInDays($start);
+            $start = max(Carbon::parse($reservation->fecha_inicio), $startDate);
+            $end = min(Carbon::parse($reservation->fecha_fin), $endDate);
+            
+            if ($end->greaterThan($start)) {
+                $occupiedDays += $end->diffInDays($start);
+            }
         }
 
         $occupancyRate = $totalCapacity > 0 ? round(($occupiedDays / $totalCapacity) * 100, 2) : 0;
 
-        $data = [
-            'total_rooms' => $totalRooms,
-            'total_days' => $totalDays,
-            'occupied_days' => $occupiedDays,
-            'occupancy_rate' => $occupancyRate,
-            'total_reservations' => $reservations->count(),
-            'average_occupancy_per_room' => $totalRooms > 0 ? round($occupiedDays / $totalRooms, 2) : 0,
+        return [
+            'resumen_de_ocupacion' => [
+                'periodo_evaluado' => $startDate->format('d/m/Y') . ' al ' . $endDate->format('d/m/Y'),
+                'porcentaje_ocupacion_global' => $occupancyRate . '%',
+                'total_reservaciones_en_periodo' => $reservations->count(),
+            ],
+            'metricas_detalladas' => [
+                'habitaciones_disponibles' => $totalRooms,
+                'capacidad_maxima_dias' => $totalCapacity,
+                'dias_efectivos_ocupados' => $occupiedDays,
+                'promedio_dias_por_habitacion' => $totalRooms > 0 ? round($occupiedDays / $totalRooms, 2) : 0,
+            ]
         ];
-
-        $summary = [
-            'period' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
-            'occupancy_percentage' => $occupancyRate,
-            'total_reservations' => $reservations->count(),
-        ];
-
-        $report->markAsGenerated($data, $summary);
     }
 
-    public function generateClientReport(Report $report): void
+    public function generateClientReport(Report $report): array
     {
-        $startDate = Carbon::parse($report->start_date);
-        $endDate = Carbon::parse($report->end_date);
+        $startDate = Carbon::parse($report->start_date)->startOfDay();
+        $endDate = Carbon::parse($report->end_date)->endOfDay();
 
+        // Extrae clientes que tengan reservaciones creadas en ese rango de fechas
         $clients = Client::whereHas('reservations', function ($q) use ($startDate, $endDate) {
             $q->whereBetween('created_at', [$startDate, $endDate]);
         })->with(['reservations' => function ($q) use ($startDate, $endDate) {
@@ -109,28 +108,30 @@ class ReportGeneratorService
         $totalClients = $clients->count();
         $totalReservations = $clients->sum(fn($c) => $c->reservations->count());
         $repeatClients = $clients->filter(fn($c) => $c->reservations->count() > 1)->count();
+        $newClients = $totalClients - $repeatClients;
 
-        $data = [
-            'total_clients' => $totalClients,
-            'total_reservations' => $totalReservations,
-            'repeat_clients' => $repeatClients,
-            'new_clients' => $totalClients - $repeatClients,
-            'average_reservations_per_client' => $totalClients > 0 ? round($totalReservations / $totalClients, 2) : 0,
+        return [
+            'resumen_de_clientes' => [
+                'periodo_evaluado' => $startDate->format('d/m/Y') . ' al ' . $endDate->format('d/m/Y'),
+                'clientes_atendidos_periodo' => $totalClients,
+                'clientes_nuevos' => $newClients,
+                'clientes_recurrentes' => $repeatClients,
+            ],
+            'metricas_de_fidelizacion' => [
+                'reservaciones_totales_vinculadas' => $totalReservations,
+                'promedio_reservas_por_cliente' => $totalClients > 0 ? round($totalReservations / $totalClients, 2) : 0,
+                'tasa_de_retencion' => $totalClients > 0 ? round(($repeatClients / $totalClients) * 100, 2) . '%' : '0%',
+            ]
         ];
-
-        $summary = [
-            'period' => $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d'),
-            'new_clients_count' => $totalClients - $repeatClients,
-            'repeat_clients_count' => $repeatClients,
-        ];
-
-        $report->markAsGenerated($data, $summary);
     }
 
-    private function groupByDate($collection, $dateField)
+    /**
+     * Función helper genérica para agrupar ingresos diarios
+     */
+    private function groupByDate($collection, $dateField, $amountField)
     {
         return $collection->groupBy(function ($item) use ($dateField) {
-            return $item->{$dateField}->format('Y-m-d');
-        })->map(fn($group) => $group->sum('amount'))->toArray();
+            return Carbon::parse($item->{$dateField})->format('Y-m-d');
+        })->map(fn($group) => round($group->sum($amountField), 2))->toArray();
     }
 }

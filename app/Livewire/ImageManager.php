@@ -8,7 +8,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str; // <-- Añadido para limpiar strings
+use Illuminate\Support\Str;
 
 #[Layout('layouts.app')]
 class ImageManager extends Component
@@ -32,11 +32,7 @@ class ImageManager extends Component
 
     public function updatedRoomId($value)
     {
-        if ($value) {
-            $this->selectRoom($value);
-        } else {
-            $this->resetRoom();
-        }
+        $value ? $this->selectRoom($value) : $this->resetRoom();
     }
 
     public function selectRoom($id)
@@ -78,30 +74,21 @@ class ImageManager extends Component
 
         try {
             $file = $this->imagen;
-            
-            // 1. Limpiamos el roomId para asegurar que no haya espacios
             $cleanRoomId = trim(strval($this->roomId));
             
-            // 2. Generamos el nombre sin usar espacios ni caracteres especiales
-            $filename = 'room_' . $cleanRoomId . '_' . time() . '_' . Str::random(5) . '.' . $file->getClientOriginalExtension();
+            // Genera un nombre seguro y único
+            $filename = sprintf('room_%s_%s_%s.%s', $cleanRoomId, time(), Str::random(5), $file->getClientOriginalExtension());
             
-            $disk = config('filesystems.default') === 'supabase' ? 'supabase' : 'public';
+            // Obtenemos el disco por defecto (será 'supabase' gracias a tu .env)
+            $disk = config('filesystems.default');
 
-            if ($disk === 'supabase') {
-                // Guardar en la RAIZ del bucket
-                $file->storeAs('', $filename, 'supabase');
-                
-                // Construir URL limpia garantizando que no haya espacios escondidos
-                $baseUrl = rtrim(env('SUPABASE_URL'), '/');
-                $bucketName = trim(env('SUPABASE_STORAGE_BUCKET'));
-                $imageUrl = "{$baseUrl}/storage/v1/object/public/{$bucketName}/{$filename}";
-                
-            } else {
-                $path = $file->storeAs('room', $filename, 'public');
-                $imageUrl = Storage::disk('public')->url($path);
-            }
+            // Guarda el archivo en la RAÍZ del bucket usando '/'
+            $file->storeAs('/', $filename, $disk);
             
-            $isPrimary = RoomImage::where('room_id', $this->roomId)->count() === 0;
+            // Genera la URL pública usando el nombre del archivo directamente
+            $imageUrl = Storage::disk($disk)->url($filename);
+            
+            $isPrimary = RoomImage::where('room_id', $this->roomId)->doesntExist();
             
             RoomImage::create([
                 'room_id' => $this->roomId,
@@ -126,14 +113,19 @@ class ImageManager extends Component
             $image = RoomImage::find($imageId);
             
             if ($image) {
+                $disk = config('filesystems.default');
+                
+                // Eliminamos el archivo buscando directamente su nombre en la raíz del bucket
+                if (Storage::disk($disk)->exists($image->filename)) {
+                    Storage::disk($disk)->delete($image->filename);
+                }
+
                 $wasPrimary = $image->is_primary;
                 $image->delete();
                 
                 if ($wasPrimary && $this->roomId) {
                     $nextImage = RoomImage::where('room_id', $this->roomId)->first();
-                    if ($nextImage) {
-                        $nextImage->update(['is_primary' => true]);
-                    }
+                    $nextImage?->update(['is_primary' => true]);
                 }
                 
                 $this->loadImages();

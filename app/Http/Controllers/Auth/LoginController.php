@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -47,7 +47,16 @@ class LoginController extends Controller
             ])->withInput($request->only('email'));
         }
 
-        if (Auth::attempt(['email' => $email, 'password' => $validated['password']], $request->boolean('remember'))) {
+        // Verificación explícita de usuario activo antes del attempt
+        $user = User::where('email', $email)->first();
+        if ($user && !$user->is_active) {
+            $this->logSecurityEvent('login_failed_inactive', $request, ['email' => $email]);
+            return back()->withErrors([
+                'email' => 'Acceso Bloqueado: Comunícate con el administrador.'
+            ])->withInput($request->only('email'));
+        }
+
+        if (Auth::attempt(['email' => $email, 'password' => $validated['password'], 'is_active' => true], $request->boolean('remember'))) {
             $this->clearFailedAttempts($email);
             $this->logSecurityEvent('login_success', $request, ['email' => $email]);
             $request->session()->regenerate();
@@ -100,11 +109,8 @@ class LoginController extends Controller
 
     private function clearFailedAttempts(string $email): void
     {
-        $attemptKey = $this->getAttemptKey($email);
-        $lockKey = $this->getLockKey($email);
-        
-        RateLimiter::clear($attemptKey);
-        RateLimiter::clear($lockKey);
+        RateLimiter::clear($this->getAttemptKey($email));
+        RateLimiter::clear($this->getLockKey($email));
     }
 
     private function getAttemptKey(string $email): string
