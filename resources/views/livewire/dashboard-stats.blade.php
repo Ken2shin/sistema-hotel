@@ -17,7 +17,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 text-sm font-semibold tracking-wide">Reservas (Hoy)</p>
-                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $reservations_today }}</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $reservations_today ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 flex items-center justify-center bg-blue-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 text-sm font-semibold tracking-wide">Clientes (Hoy)</p>
-                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $clients_today }}</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $clients_today ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 flex items-center justify-center bg-emerald-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 text-sm font-semibold tracking-wide">Ingresos (Hoy)</p>
-                    <p class="text-4xl font-extrabold text-slate-800 mt-2">${{ number_format($revenue_today, 2) }}</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">${{ number_format($revenue_today ?? 0, 2) }}</p>
                 </div>
                 <div class="w-12 h-12 flex items-center justify-center bg-amber-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-slate-500 text-sm font-semibold tracking-wide">Ocupación</p>
-                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $occupancy_rate }}%</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $occupancy_rate ?? 0 }}%</p>
                 </div>
                 <div class="w-12 h-12 flex items-center justify-center bg-purple-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +87,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100/60">
-                        @forelse($recent_reservations as $reservation)
+                        @forelse($recent_reservations ?? [] as $reservation)
                             <tr class="hover:bg-slate-50/50 transition duration-200">
                                 <td class="px-7 py-4 text-slate-800 font-semibold">{{ $reservation->client->name ?? 'N/A' }}</td>
                                 <td class="px-7 py-4 text-slate-600">{{ $reservation->room->number ?? 'N/A' }}</td>
@@ -112,7 +112,13 @@
                                     </span>
                                 </td>
                             </tr>
-                        @forelse
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-7 py-10 text-center text-slate-500 font-medium">
+                                    <p class="text-sm">No hay reservas recientes registradas hoy.</p>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -125,9 +131,9 @@
                 <p class="text-sm font-bold text-slate-700 mb-3">Nivel de Ocupación</p>
                 <div class="flex items-center justify-between mb-2">
                     <div class="w-full bg-slate-200/60 rounded-full h-3 mr-4 overflow-hidden">
-                        <div class="bg-purple-500 h-3 rounded-full transition-all duration-1000 ease-out" style="width: {{ $occupancy_rate }}%"></div>
+                        <div class="bg-purple-500 h-3 rounded-full transition-all duration-1000 ease-out" style="width: {{ $occupancy_rate ?? 0 }}%"></div>
                     </div>
-                    <span class="text-base font-extrabold text-slate-800">{{ $occupancy_rate }}%</span>
+                    <span class="text-base font-extrabold text-slate-800">{{ $occupancy_rate ?? 0 }}%</span>
                 </div>
                 <p class="text-xs font-medium text-slate-500 text-right">{{ $stats['occupied_rooms'] ?? 0 }} de {{ $stats['total_rooms'] ?? 0 }} ocupadas</p>
             </div>
