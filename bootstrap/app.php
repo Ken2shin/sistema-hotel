@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,5 +16,14 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        
+        // 🔥 SOLUCIÓN AL ERROR DE LOGOUT (GET method is not supported)
+        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
+            // Si el usuario intenta acceder a "logout" por URL (GET), 
+            // simplemente lo redirigimos al Login sin mostrar errores.
+            if ($request->is('logout')) {
+                return redirect()->route('login');
+            }
+        });
+        
     })->create();
