@@ -1,71 +1,69 @@
-<div class="space-y-8" wire:poll.5s="refreshStats">
+<div class="space-y-8" wire:poll.10s="refreshStats">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p class="text-slate-600 mt-2">
+            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Resumen de Hoy</h1>
+            <p class="text-slate-500 mt-1.5 font-medium text-sm">
                 @php
                     $days = ['Monday' => 'Lunes', 'Tuesday' => 'Martes', 'Wednesday' => 'Miércoles', 'Thursday' => 'Jueves', 'Friday' => 'Viernes', 'Saturday' => 'Sábado', 'Sunday' => 'Domingo'];
                     $months = ['January' => 'enero', 'February' => 'febrero', 'March' => 'marzo', 'April' => 'abril', 'May' => 'mayo', 'June' => 'junio', 'July' => 'julio', 'August' => 'agosto', 'September' => 'septiembre', 'October' => 'octubre', 'November' => 'noviembre', 'December' => 'diciembre'];
-                    $dayName = $days[now()->format('l')];
-                    $monthName = $months[now()->format('F')];
-                    echo "{$dayName}, " . now()->format('d') . " de {$monthName} de " . now()->format('Y');
+                    echo $days[now()->format('l')] . ", " . now()->format('d') . " de " . $months[now()->format('F')] . " de " . now()->format('Y');
                 @endphp
             </p>
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-lg transition">
+        <div class="bg-white/70 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-slate-600 text-sm font-medium">Reservas Totales</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">{{ $stats['total_reservations'] ?? 0 }}</p>
+                    <p class="text-slate-500 text-sm font-semibold tracking-wide">Reservas (Hoy)</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $reservations_today }}</p>
                 </div>
-                <div class="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                <div class="w-12 h-12 flex items-center justify-center bg-blue-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m0 0V3a2 2 0 00-2-2h-2a2 2 0 00-2 2v2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m0 0V3a2 2 0 00-2-2h-2a2 2 0 00-2 2v2z"></path>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-lg transition">
+        <div class="bg-white/70 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-slate-600 text-sm font-medium">Clientes Registrados</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">{{ $stats['total_clients'] ?? 0 }}</p>
+                    <p class="text-slate-500 text-sm font-semibold tracking-wide">Clientes (Hoy)</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $clients_today }}</p>
                 </div>
-                <div class="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292m0 0H8.646m3.354 0H16m0 0a4 4 0 110-5.292m0 0H8.646m3.354 0H16"></path>
+                <div class="w-12 h-12 flex items-center justify-center bg-emerald-500/10 rounded-2xl">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292m0 0H8.646m3.354 0H16m0 0a4 4 0 110-5.292m0 0H8.646m3.354 0H16"></path>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-lg transition">
+        <div class="bg-white/70 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-slate-600 text-sm font-medium">Ingresos Totales</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">${{ number_format($stats['total_revenue'] ?? 0, 2) }}</p>
+                    <p class="text-slate-500 text-sm font-semibold tracking-wide">Ingresos (Hoy)</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">${{ number_format($revenue_today, 2) }}</p>
                 </div>
-                <div class="p-3 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg">
+                <div class="w-12 h-12 flex items-center justify-center bg-amber-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-lg transition">
+        <div class="bg-white/70 backdrop-blur-xl rounded-3xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-slate-600 text-sm font-medium">Tasa de Ocupación</p>
-                    <p class="text-3xl font-bold text-slate-900 mt-1">{{ $occupancy_rate ?? 0 }}%</p>
+                    <p class="text-slate-500 text-sm font-semibold tracking-wide">Ocupación</p>
+                    <p class="text-4xl font-extrabold text-slate-800 mt-2">{{ $occupancy_rate }}%</p>
                 </div>
-                <div class="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                <div class="w-12 h-12 flex items-center justify-center bg-purple-500/10 rounded-2xl">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
                 </div>
             </div>
@@ -73,80 +71,75 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <h2 class="text-lg font-bold text-slate-900">Reservas Recientes</h2>
-                <a href="{{ route('admin.reservations') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Ver todas</a>
+        <div class="lg:col-span-2 bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+            <div class="px-7 py-5 border-b border-slate-100/60 flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-800 tracking-tight">Reservas Recientes</h2>
+                <a href="{{ route('admin.reservations') }}" class="text-blue-600 hover:text-blue-800 text-sm font-bold bg-blue-50 px-4 py-1.5 rounded-full transition-colors">Ver todas</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="bg-slate-50/50">
                         <tr>
-                            <th class="px-6 py-3 text-left font-semibold text-slate-700">Cliente</th>
-                            <th class="px-6 py-3 text-left font-semibold text-slate-700">Habitación</th>
-                            <th class="px-6 py-3 text-left font-semibold text-slate-700">Check-in</th>
-                            <th class="px-6 py-3 text-left font-semibold text-slate-700">Estado</th>
+                            <th class="px-7 py-4 text-left font-bold text-slate-500 tracking-wide">Cliente</th>
+                            <th class="px-7 py-4 text-left font-bold text-slate-500 tracking-wide">Habitación</th>
+                            <th class="px-7 py-4 text-left font-bold text-slate-500 tracking-wide">Check-in</th>
+                            <th class="px-7 py-4 text-left font-bold text-slate-500 tracking-wide">Estado</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200">
+                    <tbody class="divide-y divide-slate-100/60">
                         @forelse($recent_reservations as $reservation)
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="px-6 py-3 text-slate-900">{{ $reservation->client->name ?? 'N/A' }}</td>
-                                <td class="px-6 py-3 text-slate-900">{{ $reservation->room->number ?? 'N/A' }}</td>
-                                <td class="px-6 py-3 text-slate-600">{{ $reservation->check_in?->format('d M, Y') ?? 'N/A' }}</td>
-                                <td class="px-6 py-3">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
-                                        @if($reservation->status === 'confirmed') bg-green-100 text-green-700
-                                        @elseif($reservation->status === 'pending') bg-amber-100 text-amber-700
-                                        @else bg-red-100 text-red-700
-                                        @endif">
-                                        {{ match($reservation->status) {
-                                            'confirmed' => 'Confirmada',
-                                            'pending' => 'Pendiente',
-                                            'cancelled' => 'Cancelada',
-                                            default => ucfirst($reservation->status)
-                                        } }}
+                            <tr class="hover:bg-slate-50/50 transition duration-200">
+                                <td class="px-7 py-4 text-slate-800 font-semibold">{{ $reservation->client->name ?? 'N/A' }}</td>
+                                <td class="px-7 py-4 text-slate-600">{{ $reservation->room->number ?? 'N/A' }}</td>
+                                <td class="px-7 py-4 text-slate-600">{{ $reservation->check_in ? \Carbon\Carbon::parse($reservation->check_in)->format('d M, Y') : 'N/A' }}</td>
+                                <td class="px-7 py-4">
+                                    @php
+                                        $statusStyles = match($reservation->status) {
+                                            'confirmed', 'confirmada' => 'bg-emerald-100 text-emerald-700',
+                                            'pending', 'pendiente' => 'bg-amber-100 text-amber-700',
+                                            'cancelled', 'cancelada' => 'bg-red-100 text-red-700',
+                                            default => 'bg-slate-100 text-slate-700'
+                                        };
+                                        $statusText = match($reservation->status) {
+                                            'confirmed', 'confirmada' => 'Confirmada',
+                                            'pending', 'pendiente' => 'Pendiente',
+                                            'cancelled', 'cancelada' => 'Cancelada',
+                                            default => ucfirst($reservation->status ?? 'N/A')
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $statusStyles }}">
+                                        {{ $statusText }}
                                     </span>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-8 text-center text-slate-600">
-                                    <p class="text-sm">Sin reservas recientes</p>
-                                </td>
-                            </tr>
-                        @endforelse
+                        @forelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-slate-200 p-6">
-            <h2 class="text-lg font-bold text-slate-900 mb-4">Ocupación e Ingresos</h2>
-            <div class="flex flex-col items-center justify-center py-8">
-                <div class="text-4xl font-bold text-slate-900">${{ number_format($revenue_today ?? 0, 2) }}</div>
-                <p class="text-slate-600 text-sm mt-1">Ingresos de hoy</p>
-                <div class="mt-6 w-full space-y-4">
-                    <div class="bg-slate-50 rounded-lg p-4">
-                        <p class="text-sm font-medium text-slate-900 mb-2">Ocupación Actual</p>
-                        <div class="flex items-center justify-between">
-                            <div class="w-full bg-slate-200 rounded-full h-2 mr-3">
-                                <div class="bg-purple-600 h-2 rounded-full transition-all" style="width: {{ $occupancy_rate }}%"></div>
-                            </div>
-                            <span class="text-sm font-bold text-slate-900">{{ $occupancy_rate }}%</span>
-                        </div>
-                        <p class="text-xs text-slate-600 mt-2">{{ $stats['occupied_rooms'] ?? 0 }} de {{ $stats['total_rooms'] ?? 0 }} habitaciones</p>
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 flex flex-col justify-center">
+            <h2 class="text-lg font-bold text-slate-800 mb-6 tracking-tight text-center">Estado del Hotel</h2>
+            
+            <div class="bg-slate-50/80 rounded-2xl p-5 mb-6 border border-slate-100">
+                <p class="text-sm font-bold text-slate-700 mb-3">Nivel de Ocupación</p>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="w-full bg-slate-200/60 rounded-full h-3 mr-4 overflow-hidden">
+                        <div class="bg-purple-500 h-3 rounded-full transition-all duration-1000 ease-out" style="width: {{ $occupancy_rate }}%"></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-3 text-xs">
-                        <div class="bg-blue-50 rounded-lg p-3">
-                            <p class="text-blue-600 font-medium">Reservas Pendientes</p>
-                            <p class="text-2xl font-bold text-blue-700">{{ $stats['pending_reservations'] ?? 0 }}</p>
-                        </div>
-                        <div class="bg-green-50 rounded-lg p-3">
-                            <p class="text-green-600 font-medium">Disponibles</p>
-                            <p class="text-2xl font-bold text-green-700">{{ ($stats['total_rooms'] ?? 0) - ($stats['occupied_rooms'] ?? 0) }}</p>
-                        </div>
-                    </div>
+                    <span class="text-base font-extrabold text-slate-800">{{ $occupancy_rate }}%</span>
+                </div>
+                <p class="text-xs font-medium text-slate-500 text-right">{{ $stats['occupied_rooms'] ?? 0 }} de {{ $stats['total_rooms'] ?? 0 }} ocupadas</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50 text-center">
+                    <p class="text-blue-600/80 text-xs font-bold mb-1 uppercase tracking-wider">Pendientes</p>
+                    <p class="text-3xl font-extrabold text-blue-700">{{ $stats['pending_reservations'] ?? 0 }}</p>
+                </div>
+                <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 text-center">
+                    <p class="text-emerald-600/80 text-xs font-bold mb-1 uppercase tracking-wider">Disponibles</p>
+                    <p class="text-3xl font-extrabold text-emerald-700">{{ ($stats['total_rooms'] ?? 0) - ($stats['occupied_rooms'] ?? 0) }}</p>
                 </div>
             </div>
         </div>

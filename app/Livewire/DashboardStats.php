@@ -8,14 +8,13 @@ use App\Models\Reservation;
 use App\Models\Client;
 use App\Models\Room;
 use App\Models\Payment;
-use Carbon\Carbon;
 
 class DashboardStats extends Component
 {
     public $stats = [];
     public $recent_reservations = [];
     
-    // Métricas del día
+    // Métricas exclusivas del día actual (Se reinician a 0 a la medianoche)
     public $revenue_today = 0;
     public $clients_today = 0;
     public $reservations_today = 0;
@@ -37,35 +36,37 @@ class DashboardStats extends Component
 
     private function loadStats()
     {
-        $today = Carbon::today(); // 00:00:00 del día actual
+        // 1. OBTENER EL RANGO EXACTO DEL DÍA ACTUAL
+        // Esto previene fallos en producción garantizando que busque 
+        // desde las 00:00:00 hasta las 23:59:59 de hoy (Timezone de la APP).
+        $startOfToday = now()->startOfDay();
+        $endOfToday = now()->endOfDay();
 
+        // 2. MÉTRICAS GLOBALES DEL HOTEL (No dependen del día)
         $this->stats = [
-            'total_reservations' => Reservation::count(),
-            'total_clients' => Client::count(),
             'total_rooms' => Room::count(),
-            'total_revenue' => (float) (Payment::where('status', 'completed')->sum('amount') ?? 0),
-            'pending_reservations' => Reservation::where('status', 'pending')->count(),
             'occupied_rooms' => Room::where('status', 'occupied')->count(),
+            'pending_reservations' => Reservation::where('status', 'pending')->count(),
         ];
 
-        // Métricas diarias (Today's Metrics)
-        $this->clients_today = Client::whereDate('created_at', $today)->count();
-        $this->reservations_today = Reservation::whereDate('created_at', $today)->count();
-        $this->revenue_today = (float) (Payment::where('status', 'completed')
-            ->whereDate('created_at', $today)
-            ->sum('amount') ?? 0);
+        // 3. MÉTRICAS DIARIAS (Se reinician a 0 cada día automáticamente)
+        $this->clients_today = Client::whereBetween('created_at', [$startOfToday, $endOfToday])->count();
+        $this->reservations_today = Reservation::whereBetween('created_at', [$startOfToday, $endOfToday])->count();
+        $this->revenue_today = (float) Payment::where('status', 'completed')
+            ->whereBetween('created_at', [$startOfToday, $endOfToday])
+            ->sum('amount');
 
-        // Ocupación calculada de forma segura
+        // 4. CÁLCULO DE OCUPACIÓN SEGURO
         $totalRooms = $this->stats['total_rooms'] ?? 0;
         $this->occupancy_rate = $totalRooms > 0 
             ? round(($this->stats['occupied_rooms'] / $totalRooms) * 100, 2) 
             : 0.0;
 
-        $this->recent_reservations = Reservation::with(['client:id,name,email', 'room:id,number,type'])
-            ->select(['id', 'client_id', 'room_id', 'check_in', 'check_out', 'status', 'created_at'])
-            ->where('created_at', '>=', now()->subDays(30))
-            ->latest('created_at')
-            ->limit(10)
+        // 5. RESERVAS RECIENTES (Optimizado para no saturar memoria)
+        $this->recent_reservations = Reservation::with(['client:id,name', 'room:id,number'])
+            ->select(['id', 'client_id', 'room_id', 'check_in', 'status', 'created_at'])
+            ->latest('created_at') // Las más nuevas primero
+            ->limit(8)             // Limitamos a 8 para mantener limpio el diseño
             ->get();
     }
 

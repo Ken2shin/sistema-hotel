@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Payment;
-use App\Models\Reservation;
+use App\Models\Reservation; // Importamos el modelo Reservation para el select
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -17,15 +17,33 @@ class PaymentManager extends Component
     public $status = '';
     public $perPage = 10;
     
+    // Variables de UI
     public $showForm = false;
+
+    // Variables del Formulario
     public $reservation_id = '';
     public $monto = '';
-    public $metodo_pago = '';
-    public $descripcion = '';
+    public $metodo_pago = 'efectivo'; // valor por defecto
+    public $estado_pago = 'completado'; // valor por defecto
+    public $referencia = '';
 
-    public function mount()
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'status' => ['except' => ''],
+    ];
+
+    protected $paginationTheme = 'tailwind';
+
+    // Reglas de validación
+    protected function rules()
     {
-        $this->metodo_pago = 'efectivo';
+        return [
+            'reservation_id' => 'required|exists:reservations,id',
+            'monto' => 'required|numeric|min:0.01',
+            'metodo_pago' => 'required|in:efectivo,tarjeta_credito,tarjeta_debito,transferencia',
+            'estado_pago' => 'required|in:completado,pendiente,fallido',
+            'referencia' => 'nullable|string|max:100',
+        ];
     }
 
     public function updatingSearch()
@@ -40,91 +58,81 @@ class PaymentManager extends Component
 
     public function openCreateForm()
     {
-        $this->reset(['reservation_id', 'monto', 'descripcion']);
-        $this->metodo_pago = 'efectivo';
+        $this->resetForm();
         $this->showForm = true;
-        $this->resetValidation();
     }
 
     public function closeForm()
     {
         $this->showForm = false;
+        $this->resetValidation();
     }
 
-    public function savePayment()
+    public function resetForm()
     {
-        $this->validate([
-            'reservation_id' => 'required|exists:reservations,id',
-            'monto' => 'required|numeric|min:0.01',
-            'metodo_pago' => 'required|string',
-            'descripcion' => 'nullable|string|max:255',
-        ]);
+        $this->reset(['reservation_id', 'monto', 'referencia']);
+        $this->metodo_pago = 'efectivo';
+        $this->estado_pago = 'completado';
+    }
+
+    public function save()
+    {
+        $this->validate();
 
         try {
-            $reservation = Reservation::find($this->reservation_id);
-            
-            $numeroTransaccion = 'TRX-' . time() . '-' . strtoupper(substr(uniqid(), -5));
-
             Payment::create([
                 'reservation_id' => $this->reservation_id,
                 'monto' => $this->monto,
                 'metodo_pago' => $this->metodo_pago,
-                'numero_transaccion' => $numeroTransaccion,
-                'estado' => 'completado',
-                'fecha_pago' => now(),
-                'descripcion' => $this->descripcion,
+                'estado' => $this->estado_pago,
+                // Generamos un numero de transaccion automatico si el usuario no pone referencia
+                'numero_transaccion' => $this->referencia ?: 'TRX-' . strtoupper(uniqid()),
             ]);
 
-            session()->flash('message', 'Pago registrado exitosamente. (TRX: ' . $numeroTransaccion . ')');
-            
+            session()->flash('message', 'La transacción ha sido procesada y registrada exitosamente.');
             $this->closeForm();
             
+            // Si el dashboard está escuchando este evento, se actualizará
+            $this->dispatch('payment-completed');
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al registrar el pago: ' . $e->getMessage());
+            session()->flash('error', 'Error al procesar el pago: ' . $e->getMessage());
         }
     }
 
     public function deletePayment($id)
     {
-        Payment::find($id)?->delete();
-        session()->flash('message', 'Pago eliminado del registro.');
-    }
-
-    public function markAsCompleted($id)
-    {
-        $payment = Payment::find($id);
-        if($payment) {
-            $payment->update(['estado' => 'completado']);
-            session()->flash('message', 'Pago marcado como completado.');
-        }
+        Payment::findOrFail($id)->delete();
+        session()->flash('message', 'La transacción fue eliminada correctamente del sistema.');
     }
 
     public function render()
     {
-        $query = Payment::with(['reservation.client']);
-
-        if (!empty($this->search)) {
-            $query->whereHas('reservation.client', function($q) {
-                $q->where('nombre', 'like', "%{$this->search}%")
-                  ->orWhere('email', 'like', "%{$this->search}%");
+        $payments = Payment::query()
+            ->with(['reservation.client'])
+            ->when($this->search, function ($q) {
+                $q->where(function ($query) {
+                    $query->where('numero_transaccion', 'ilike', '%' . $this->search . '%')
+                        ->orWhereHas('reservation.client', function ($q2) {
+                            $q2->where('nombre', 'ilike', '%' . $this->search . '%');
+                        });
+                });
             })
-            ->orWhere('numero_transaccion', 'like', "%{$this->search}%");
-        }
+            ->when($this->status, function ($q) {
+                $q->where('estado', $this->status);
+            })
+            ->orderByDesc('created_at')
+            ->paginate($this->perPage);
 
-        if (!empty($this->status)) {
-            $query->where('estado', $this->status);
-        }
-
-        $payments = $query->orderBy('created_at', 'desc')->paginate($this->perPage);
-        
-        $pendingReservations = Reservation::with('client')
-            ->whereIn('estado', ['pendiente', 'confirmada'])
-            ->orderBy('created_at', 'desc')
+        // Obtenemos las reservas para el select (solo las que no han sido canceladas)
+        $reservations = Reservation::with(['client', 'room'])
+            ->where('estado', '!=', 'cancelada')
+            ->orderByDesc('created_at')
             ->get();
 
         return view('livewire.payment-manager', [
             'payments' => $payments,
-            'pendingReservations' => $pendingReservations,
+            'reservations' => $reservations
         ]);
     }
 }
